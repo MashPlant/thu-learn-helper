@@ -36,7 +36,6 @@ impl LearnHelper {
   }
 
   pub fn notification_list(&self, course: IdRef) -> Result<Vec<Notification>> {
-    println!("{}", self.0.get(   &NOTIFICATION_LIST(course)  ).send()?.text()?);
     let mut res = self.0.get(&NOTIFICATION_LIST(course)).send()?.json::<JsonWrapper2<JsonWrapper20<Notification>>>()?.object.aaData;
     for x in &mut res {
       x.attachment_url = if x.attachment_name.is_some() {
@@ -57,7 +56,6 @@ impl LearnHelper {
   pub fn homework_list(&self, course: IdRef) -> Result<Vec<Homework>> {
     let mut ret = Vec::new();
     for f in &HOMEWORK_LIST_ALL {
-      println!("{}", self.0.get(   &f(course)  ).send()?.text()?);
       let mut res = self.0.get(&f(course)).send()?.json::<JsonWrapper2<JsonWrapper20<Homework>>>()?.object.aaData;
       for x in &mut res {
         let res = self.0.get(&x.detail_url()).send()?.text()?;
