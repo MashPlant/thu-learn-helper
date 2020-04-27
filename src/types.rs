@@ -123,6 +123,8 @@ impl DerefMut for Homework {
 
 impl Homework {
   pub fn detail_url(&self) -> String { HOMEWORK_DETAIL(&self.course_id, &self.id, &self.student_homework_id) }
+
+  pub fn submit_url(&self) -> String { HOMEWORK_SUBMIT(&self.course_id, &self.student_homework_id) }
 }
 
 #[derive(Debug, Default)]

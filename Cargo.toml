@@ -5,17 +5,17 @@ authors = ["MashPlant <740678788@qq.com>"]
 edition = "2018"
 
 [dependencies]
-reqwest = { version = "0.10", features = ["blocking", "cookies", "json"] }
+reqwest = { version = "0.10", features = ["cookies", "json"] }
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.12"
 scraper = "0.11"
-lazy_static = "1.4.0"
-tokio = { version = "0.2", features = ["macros"] }
+lazy_static = "1.4"
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
 
-[lib]
-path = "src/lib.rs"
+[features]
+blocking = ["reqwest/blocking"]
 
 [dev-dependencies]
 tokio = { version = "0.2", features = ["full"] }

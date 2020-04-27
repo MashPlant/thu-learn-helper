@@ -2,13 +2,14 @@
 #![feature(async_closure)]
 
 mod parse;
-mod try_join_all;
-pub mod urls;
+mod urls;
 pub mod types;
+#[cfg(feature = "blocking")]
 pub mod blocking;
 
 use reqwest::{Client, ClientBuilder};
-use crate::{parse::*, urls::*, types::*, try_join_all::try_join_all};
+use futures::future::{try_join3, try_join_all};
+use crate::{parse::*, urls::*, types::*};
 
 pub struct LearnHelper(pub Client);
 
@@ -74,8 +75,7 @@ impl LearnHelper {
       })).await?;
       Ok::<_, Error>(res)
     };
-    let (h0, h1, h2) = tokio::join!(f(HOMEWORK_LIST_ALL[0]), f(HOMEWORK_LIST_ALL[1]), f(HOMEWORK_LIST_ALL[2]));
-    let (mut res, mut h1, mut h2) = (h0?, h1?, h2?);
+    let (mut res, mut h1, mut h2) = try_join3(f(HOMEWORK_LIST_ALL[0]), f(HOMEWORK_LIST_ALL[1]), f(HOMEWORK_LIST_ALL[2])).await?;
     res.reserve(h1.len() + h2.len());
     res.append(&mut h1);
     res.append(&mut h2);

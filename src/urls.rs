@@ -14,10 +14,6 @@ pub fn COURSE_LIST(semester: &str) -> String {
   format!("https://learn.tsinghua.edu.cn/b/wlxt/kc/v_wlkc_xs_xkb_kcb_extend/student/loadCourseBySemesterId/{}", semester)
 }
 
-pub fn COURSE(course: &str) -> String {
-  format!("https://learn.tsinghua.edu.cn/f/wlxt/index/course/student/course?wlkcid={}", course)
-}
-
 pub fn COURSE_URL(course: &str) -> String {
   format!("https://learn.tsinghua.edu.cn/f/wlxt/index/course/student/course?wlkcid={}", course)
 }
@@ -58,10 +54,6 @@ pub const HOMEWORK_LIST_ALL: [fn(&str) -> String; 3] = [HOMEWORK_LIST_NEW, HOMEW
 
 pub fn HOMEWORK_DETAIL(course: &str, homework: &str, student_homework: &str) -> String {
   format!("https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewCj?wlkcid={}&zyid={}&xszyid={}", course, homework, student_homework)
-}
-
-pub fn HOMEWORK_DOWNLOAD(course: &str, attachment: &str) -> String {
-  format!("https://learn.tsinghua.edu.cn/b/wlxt/kczy/zy/student/downloadFile/{}/{}", course, attachment)
 }
 
 pub fn HOMEWORK_SUBMIT(course: &str, student_homework: &str) -> String {
