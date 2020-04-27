@@ -1,9 +1,10 @@
 use chrono::NaiveDateTime;
 use serde::Deserialize;
-use std::{fmt, ops::{Deref, DerefMut}};
+use derive_more::{From, Deref, DerefMut};
+use std::fmt;
 use crate::{parse::*, urls::*};
 
-#[derive(Debug)]
+#[derive(Debug, From)]
 pub enum Error {
   Network(reqwest::Error),
   Message(&'static str),
@@ -19,14 +20,6 @@ impl fmt::Display for Error {
 }
 
 impl std::error::Error for Error {}
-
-impl From<reqwest::Error> for Error {
-  fn from(e: reqwest::Error) -> Self { Self::Network(e) }
-}
-
-impl From<&'static str> for Error {
-  fn from(m: &'static str) -> Self { Self::Message(m) }
-}
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -49,8 +42,9 @@ pub struct Course {
   #[serde(rename = "kcm")] pub name: String,
   #[serde(rename = "ywkcm")] pub english_name: String,
   #[serde(rename = "jsm")] pub teacher_name: String,
-  #[serde(rename = "jsh", deserialize_with = "from_str")] pub teacher_number: u32,
-  #[serde(rename = "kch", deserialize_with = "from_str")] pub course_number: u32,
+  // `teacher_number` and `course_number` are normally string representation of an integer, but there are a few cases that they are not
+  #[serde(rename = "jsh")] pub teacher_number: String,
+  #[serde(rename = "kch")] pub course_number: String,
   #[serde(rename = "kxh")] pub course_index: u32,
   #[serde(skip)] pub time_location: Vec<String>,
 }
@@ -96,7 +90,7 @@ impl File {
   pub fn download_url(&self) -> String { FILE_DOWNLOAD(&self.id) }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Deref, DerefMut)]
 pub struct Homework {
   #[serde(rename = "wlkcid")] pub course_id: Id,
   #[serde(rename = "zyid")] pub id: Id,
@@ -109,16 +103,10 @@ pub struct Homework {
   #[serde(rename = "pysjStr", deserialize_with = "option_date_time")] pub grade_time: Option<NaiveDateTime>,
   #[serde(rename = "jsm", deserialize_with = "nonempty_string")] pub grader_name: Option<String>,
   #[serde(rename = "pynr", deserialize_with = "nonempty_string")] pub grade_content: Option<String>,
-  #[serde(skip)] pub detail: HomeworkDetail,
-}
-
-impl Deref for Homework {
-  type Target = HomeworkDetail;
-  fn deref(&self) -> &Self::Target { &self.detail }
-}
-
-impl DerefMut for Homework {
-  fn deref_mut(&mut self) -> &mut Self::Target { &mut self.detail }
+  #[serde(skip)]
+  #[deref]
+  #[deref_mut]
+  pub detail: HomeworkDetail,
 }
 
 impl Homework {
@@ -144,40 +132,26 @@ pub struct DiscussionBase {
   #[serde(rename = "bt")] pub title: String,
   #[serde(rename = "fbrxm")] pub publisher_name: String,
   #[serde(rename = "fbsj", deserialize_with = "date_time1")] pub publish_time: NaiveDateTime,
-  #[serde(rename = "zhhfrxm")] pub last_replier_name: String,
-  #[serde(rename = "zhhfsj", deserialize_with = "date_time1")] pub last_reply_time: NaiveDateTime,
+  #[serde(rename = "zhhfrxm", deserialize_with = "nonempty_string")] pub last_replier_name: Option<String>,
+  #[serde(rename = "zhhfsj", deserialize_with = "option_date_time1")] pub last_reply_time: Option<NaiveDateTime>,
   #[serde(rename = "djs")] pub visit_count: u32,
   #[serde(rename = "hfcs")] pub reply_count: u32,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Deref, DerefMut)]
 pub struct Discussion {
   #[serde(flatten)]
+  #[deref]
+  #[deref_mut]
   pub base: DiscussionBase,
   #[serde(rename = "bqid")] pub board_id: String,
 }
 
-impl Deref for Discussion {
-  type Target = DiscussionBase;
-  fn deref(&self) -> &Self::Target { &self.base }
-}
-
-impl DerefMut for Discussion {
-  fn deref_mut(&mut self) -> &mut Self::Target { &mut self.base }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Deref, DerefMut)]
 pub struct Question {
   #[serde(flatten)]
+  #[deref]
+  #[deref_mut]
   pub base: DiscussionBase,
   #[serde(rename = "wtnr")] pub question: String,
-}
-
-impl Deref for Question {
-  type Target = DiscussionBase;
-  fn deref(&self) -> &Self::Target { &self.base }
-}
-
-impl DerefMut for Question {
-  fn deref_mut(&mut self) -> &mut Self::Target { &mut self.base }
 }

@@ -1,5 +1,4 @@
 use chrono::NaiveDateTime;
-use std::{str::FromStr, fmt::Display};
 use serde::{Deserialize, Deserializer, de::Error};
 use scraper::{Html, Selector, ElementRef};
 use crate::{urls::*, types::HomeworkDetail};
@@ -56,19 +55,28 @@ impl HomeworkDetail {
   }
 }
 
-pub fn from_str<'d, T, D>(d: D) -> Result<T, D::Error> where T: FromStr, T::Err: Display, D: Deserializer<'d> {
-  let s = <&str>::deserialize(d)?;
-  T::from_str(s).map_err(Error::custom)
+pub fn date_time<'d, D>(d: D) -> Result<NaiveDateTime, D::Error> where D: Deserializer<'d> {
+  NaiveDateTime::parse_from_str(<&str>::deserialize(d)?, "%Y-%m-%d %H:%M").map_err(Error::custom)
 }
 
-pub fn date_time<'d, D>(deserializer: D) -> Result<NaiveDateTime, D::Error> where D: Deserializer<'d> {
-  let s = <&str>::deserialize(deserializer)?;
-  NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").map_err(Error::custom)
+pub fn date_time1<'d, D>(d: D) -> Result<NaiveDateTime, D::Error> where D: Deserializer<'d> {
+  NaiveDateTime::parse_from_str(<&str>::deserialize(d)?, "%Y-%m-%d %H:%M:%S").map_err(Error::custom)
 }
 
-pub fn date_time1<'d, D>(deserializer: D) -> Result<NaiveDateTime, D::Error> where D: Deserializer<'d> {
-  let s = <&str>::deserialize(deserializer)?;
-  NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(Error::custom)
+// there is indeed some duplication, a better approach is to use the newtype pattern and define wrapper class for NaiveDateTime
+// but that would involve more boilerplate code, and is harder to use
+pub fn option_date_time<'d, D>(d: D) -> Result<Option<NaiveDateTime>, D::Error> where D: Deserializer<'d> {
+  match <Option<&str>>::deserialize(d)? {
+    Some("") | None => Ok(None),
+    Some(s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").map_err(Error::custom).map(Some)
+  }
+}
+
+pub fn option_date_time1<'d, D>(d: D) -> Result<Option<NaiveDateTime>, D::Error> where D: Deserializer<'d> {
+  match <Option<&str>>::deserialize(d)? {
+    Some("") | None => Ok(None),
+    Some(s) => NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map_err(Error::custom).map(Some)
+  }
 }
 
 pub fn str_to_bool1<'d, D>(d: D) -> Result<bool, D::Error> where D: Deserializer<'d> {
@@ -85,17 +93,9 @@ pub fn base64_string<'d, D>(d: D) -> Result<String, D::Error> where D: Deseriali
 }
 
 pub fn nonempty_string<'d, D>(d: D) -> Result<Option<String>, D::Error> where D: Deserializer<'d> {
-  let s = <Option<String>>::deserialize(d)?;
-  Ok(s.filter(|s| !s.is_empty()))
+  Ok(<Option<String>>::deserialize(d)?.filter(|s| !s.is_empty()))
 }
 
 pub fn int_to_bool<'d, D>(d: D) -> Result<bool, D::Error> where D: Deserializer<'d> {
   Ok(u32::deserialize(d)? != 0)
-}
-
-pub fn option_date_time<'d, D>(deserializer: D) -> std::result::Result<Option<NaiveDateTime>, D::Error> where D: Deserializer<'d> {
-  let s = <&str>::deserialize(deserializer)?;
-  if s.is_empty() { Ok(None) } else {
-    NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M").map_err(Error::custom).map(Some)
-  }
 }
