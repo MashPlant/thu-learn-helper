@@ -19,16 +19,10 @@ impl HomeworkDetail {
   pub(crate) fn from_html(detail: &str) -> Option<Self> {
     lazy_static::lazy_static! {
       static ref CONTENT: Selector = Selector::parse("div.list.calendar.clearfix>div.fl.right>div.c55").unwrap();
-      static ref SUBMIT_CONTENT1: Selector = Selector::parse("div.boxbox").unwrap();
-      static ref SUBMIT_CONTENT2: Selector = Selector::parse("div.right").unwrap();
       static ref FILE_DIV: Selector = Selector::parse("div.list.fujian.clearfix").unwrap();
       static ref FTITLE: Selector = Selector::parse(".ftitle").unwrap();
     }
     let detail = Html::parse_document(&detail);
-    let mut content = detail.select(&CONTENT);
-    let description = content.next()?.html();
-    let answer_content = content.next()?.html();
-    let submit_content = detail.select(&SUBMIT_CONTENT1).next()?.select(&SUBMIT_CONTENT2).nth(2)?.html();
     let mut file_div = detail.select(&FILE_DIV);
     fn name_url(e: Option<ElementRef>) -> Option<(String, String)> {
       for e in e?.select(&FTITLE) {
@@ -44,12 +38,9 @@ impl HomeworkDetail {
       None
     }
     Some(HomeworkDetail {
-      description,
-      answer_content,
-      submit_content,
+      description: detail.select(&CONTENT).next()?.html(),
       attachment_name_url: name_url(file_div.next()),
-      answer_attachment_name_url: name_url(file_div.next()),
-      submit_attachment_name_url: name_url(file_div.next()),
+      submit_attachment_name_url: name_url(file_div.nth(1)),
       grade_attachment_name_url: name_url(file_div.next()),
     })
   }

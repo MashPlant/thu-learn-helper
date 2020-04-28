@@ -99,6 +99,7 @@ pub struct Homework {
   #[serde(rename = "kssjStr", deserialize_with = "date_time")] pub assign_time: NaiveDateTime,
   #[serde(rename = "jzsjStr", deserialize_with = "date_time")] pub deadline: NaiveDateTime,
   #[serde(rename = "scsjStr", deserialize_with = "option_date_time")] pub submit_time: Option<NaiveDateTime>,
+  #[serde(rename = "zynrStr", deserialize_with = "nonempty_string")] pub submit_content: Option<String>,
   #[serde(rename = "cj")] pub grade: Option<f32>,
   #[serde(rename = "pysjStr", deserialize_with = "option_date_time")] pub grade_time: Option<NaiveDateTime>,
   #[serde(rename = "jsm", deserialize_with = "nonempty_string")] pub grader_name: Option<String>,
@@ -118,10 +119,7 @@ impl Homework {
 #[derive(Debug, Default)]
 pub struct HomeworkDetail {
   pub description: String,
-  pub answer_content: String,
-  pub submit_content: String,
   pub attachment_name_url: Option<(String, String)>,
-  pub answer_attachment_name_url: Option<(String, String)>,
   pub submit_attachment_name_url: Option<(String, String)>,
   pub grade_attachment_name_url: Option<(String, String)>,
 }
