@@ -56,9 +56,13 @@ pub fn HOMEWORK_DETAIL(course: &str, homework: &str, student_homework: &str) -> 
   format!("https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/viewCj?wlkcid={}&zyid={}&xszyid={}", course, homework, student_homework)
 }
 
-pub fn HOMEWORK_SUBMIT(course: &str, student_homework: &str) -> String {
+// the page that you click "submit homework" in browser, not really used in submitting homework
+pub fn HOMEWORK_SUBMIT_PAGE(course: &str, student_homework: &str) -> String {
   format!("https://learn.tsinghua.edu.cn/f/wlxt/kczy/zy/student/tijiao?wlkcid={}&xszyid={}", course, student_homework)
 }
+
+// the url that really performs submitting
+pub const HOMEWORK_SUBMIT: &str = "https://learn.tsinghua.edu.cn/b/wlxt/kczy/zy/student/tjzy";
 
 pub fn DISCUSSION_LIST(course: &str) -> String {
   format!("https://learn.tsinghua.edu.cn/b/wlxt/bbs/bbs_tltb/student/kctlList?wlkcid={}&size=200", course)

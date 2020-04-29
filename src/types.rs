@@ -113,7 +113,8 @@ pub struct Homework {
 impl Homework {
   pub fn detail_url(&self) -> String { HOMEWORK_DETAIL(&self.course_id, &self.id, &self.student_homework_id) }
 
-  pub fn submit_url(&self) -> String { HOMEWORK_SUBMIT(&self.course_id, &self.student_homework_id) }
+  // the page that you click "submit homework" in browser, not really used in submitting homework
+  pub fn submit_page(&self) -> String { HOMEWORK_SUBMIT_PAGE(&self.course_id, &self.student_homework_id) }
 }
 
 #[derive(Debug, Default)]

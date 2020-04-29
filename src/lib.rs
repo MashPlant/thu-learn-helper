@@ -7,8 +7,9 @@ pub mod types;
 #[cfg(feature = "blocking")]
 pub mod blocking;
 
-use reqwest::{Client, ClientBuilder};
+use reqwest::{Client, ClientBuilder, multipart::{Form, Part}, StatusCode};
 use futures::future::{try_join3, try_join_all};
+use std::borrow::Cow;
 use crate::{parse::*, urls::*, types::*};
 
 pub struct LearnHelper(pub Client);
@@ -80,6 +81,16 @@ impl LearnHelper {
     res.append(&mut h1);
     res.append(&mut h2);
     Ok(res)
+  }
+
+  pub async fn submit_homework(&self, student_homework: impl Into<Cow<'static, str>>, content: impl Into<Cow<'static, str>>,
+                               file: Option<(impl Into<Cow<'static, str>>, impl Into<Cow<'static, [u8]>>)>) -> Result<()> {
+    let form = Form::new().text("zynr", content).text("xszyid", student_homework).text("isDeleted", "0");
+    let form = if let Some((name, data)) = file {
+      form.part("fileupload", Part::bytes(data).file_name(name))
+    } else { form.text("fileupload", "undefined") };
+    let res = self.0.post(HOMEWORK_SUBMIT).multipart(form).send().await?;
+    if res.status() == StatusCode::OK { Ok(()) } else { Err("failed to submit homework".into()) }
   }
 
   pub async fn discussion_list(&self, course: IdRef<'_>) -> Result<Vec<Discussion>> {
