@@ -1,4 +1,4 @@
-use reqwest::{blocking::{Client, ClientBuilder, multipart::{Form, Part}}, StatusCode};
+use reqwest::{blocking::{Client, ClientBuilder, multipart::{Form, Part}}};
 use std::borrow::Cow;
 use crate::{parse::*, urls::*, types::*};
 
@@ -68,13 +68,13 @@ impl LearnHelper {
   }
 
   pub fn submit_homework(&self, student_homework: impl Into<Cow<'static, str>>, content: impl Into<Cow<'static, str>>,
-                               file: Option<(impl Into<Cow<'static, str>>, impl Into<Cow<'static, [u8]>>)>) -> Result<()> {
+                         file: Option<(impl Into<Cow<'static, str>>, impl Into<Cow<'static, [u8]>>)>) -> Result<()> {
     let form = Form::new().text("zynr", content).text("xszyid", student_homework).text("isDeleted", "0");
     let form = if let Some((name, data)) = file {
       form.part("fileupload", Part::bytes(data).file_name(name))
     } else { form.text("fileupload", "undefined") };
-    let res = self.0.post(HOMEWORK_SUBMIT).multipart(form).send()?;
-    if res.status() == StatusCode::OK { Ok(()) } else { Err("failed to submit homework".into()) }
+    let res = self.0.post(HOMEWORK_SUBMIT).multipart(form).send()?.text()?;
+    if res.contains("success") { Ok(()) } else { Err("failed to submit homework".into()) }
   }
 
   pub fn discussion_list(&self, course: IdRef) -> Result<Vec<Discussion>> {

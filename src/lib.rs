@@ -7,7 +7,7 @@ pub mod types;
 #[cfg(feature = "blocking")]
 pub mod blocking;
 
-use reqwest::{Client, ClientBuilder, multipart::{Form, Part}, StatusCode};
+use reqwest::{Client, ClientBuilder, multipart::{Form, Part}};
 use futures::future::{try_join3, try_join_all};
 use std::borrow::Cow;
 use crate::{parse::*, urls::*, types::*};
@@ -89,8 +89,8 @@ impl LearnHelper {
     let form = if let Some((name, data)) = file {
       form.part("fileupload", Part::bytes(data).file_name(name))
     } else { form.text("fileupload", "undefined") };
-    let res = self.0.post(HOMEWORK_SUBMIT).multipart(form).send().await?;
-    if res.status() == StatusCode::OK { Ok(()) } else { Err("failed to submit homework".into()) }
+    let res = self.0.post(HOMEWORK_SUBMIT).multipart(form).send().await?.text().await?;
+    if res.contains("success") { Ok(()) } else { Err("failed to submit homework".into()) }
   }
 
   pub async fn discussion_list(&self, course: IdRef<'_>) -> Result<Vec<Discussion>> {
