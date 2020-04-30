@@ -28,7 +28,7 @@ pub type IdRef<'a> = &'a str;
 
 pub fn semester_desc(semester: IdRef) -> String {
   let (l, r) = semester.split_at(semester.len() - 1);
-  l.to_string() + match r {
+  l.to_owned() + match r {
     "1" => "fall",
     "2" => "spring",
     "3" => "summer",

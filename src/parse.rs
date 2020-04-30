@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Deserializer, de::Error};
-use scraper::{Html, Selector, ElementRef};
+use select::{document::Document, node::Node, predicate::{Predicate, Class as C}};
 use crate::{urls::*, types::HomeworkDetail};
 
 #[derive(Deserialize)]
@@ -17,28 +17,21 @@ pub struct JsonWrapper21<T> { pub resultsList: Vec<T> }
 
 impl HomeworkDetail {
   pub(crate) fn from_html(detail: &str) -> Option<Self> {
-    lazy_static::lazy_static! {
-      static ref CONTENT: Selector = Selector::parse("div.list.calendar.clearfix>div.fl.right>div.c55").unwrap();
-      static ref FILE_DIV: Selector = Selector::parse("div.list.fujian.clearfix").unwrap();
-      static ref FTITLE: Selector = Selector::parse(".ftitle").unwrap();
-    }
-    let detail = Html::parse_document(&detail);
-    let mut file_div = detail.select(&FILE_DIV);
-    fn name_url(e: Option<ElementRef>) -> Option<(String, String)> {
-      for e in e?.select(&FTITLE) {
-        for n in e.children() {
-          if let Some(e) = n.value().as_element().filter(|x| x.name() == "a") {
-            let name = n.children().next()?.value().as_text()?.to_string();
-            let href = e.attr("href")?;
-            let url_start = href.find("downloadUrl=")? + 12;
-            return Some((name, PREFIX.to_string() + &href[url_start..]));
-          }
-        }
+    let detail = Document::from(detail);
+    let mut file_div = detail.find(C("list").and(C("fujian")).and(C("clearfix")));
+    fn name_url(e: Option<Node>) -> Option<(String, String)> {
+      for e in e?.find(C("ftitle")) {
+        let e = e.children().nth(1)?;
+        let name = e.children().next()?.as_text()?.to_owned();
+        let href = e.attr("href")?;
+        let url_start = href.find("downloadUrl=")? + 12;
+        return Some((name, PREFIX.to_owned() + &href[url_start..]));
       }
       None
     }
     Some(HomeworkDetail {
-      description: detail.select(&CONTENT).next()?.html(),
+      description: detail.find(C("list").and(C("calendar")).and(C("clearfix")).descendant(C("fl").and(C("right"))).descendant(C("c55")))
+        .next()?.inner_html(),
       attachment_name_url: name_url(file_div.next()),
       submit_attachment_name_url: name_url(file_div.nth(1)),
       grade_attachment_name_url: name_url(file_div.next()),

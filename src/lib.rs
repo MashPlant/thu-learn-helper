@@ -55,7 +55,7 @@ impl LearnHelper {
         let res = self.0.get(&NOTIFICATION_DETAIL(&x.id, course)).send().await?.text().await?;
         let href_end = res.find("\" class=\"ml-10\"").ok_or(MSG)?;
         let href_start = res[..href_end].rfind("a href=\"").ok_or(MSG)? + 8;
-        Some(PREFIX.to_string() + &res[href_start..href_end])
+        Some(PREFIX.to_owned() + &res[href_start..href_end])
       } else { None };
       OK
     })).await?;
