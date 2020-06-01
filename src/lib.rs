@@ -8,12 +8,10 @@ mod parse;
 mod urls;
 /// Defines data structures of the information fetched from web-learning.
 pub mod types;
-/// Blocking version api, need `features = ["blocking"]` to enable.
-#[cfg(feature = "blocking")]
-pub mod blocking;
 
 use reqwest::{Client, ClientBuilder, multipart::{Form, Part}};
 use futures::future::{try_join3, try_join_all};
+use std::time::Duration;
 use crate::{parse::*, urls::*, types::*};
 
 #[macro_use]
@@ -32,6 +30,25 @@ mod macros {
   macro_rules! check_success {
     (a, $req: expr, $msg: expr) => { if $req.send().await?.text().await?.contains("success") { Ok(()) } else { Err($msg.into()) } };
     (b, $req: expr, $msg: expr) => { if $req.send()?.text()?.contains("success") { Ok(()) } else { Err($msg.into()) } };
+  }
+}
+
+/// Blocking version api, need `features = ["blocking"]` to enable.
+#[cfg(feature = "blocking")]
+pub mod blocking; // it has to be placed after `macros` to use the macros inside it
+
+/// DR is short for DISCUSSION_REPLY.
+///
+/// When deleting a discussion reply from web learning, it takes a long time before a successful reply is sent back,
+/// but it normally fails fast when the deletion is illegal.
+/// So here we use a 1 second timeout limit, and if it is reached, we consider the deletion as successful.
+pub const DELETE_DR_TIMEOUT: Duration = Duration::from_secs(1);
+
+pub(crate) fn check_delete_dr_success(r: reqwest::Result<String>) -> Result<()> {
+  match r.map(|x| x.contains("success")) {
+    Ok(true) => Ok(()),
+    Err(e) if e.is_timeout() => Ok(()),
+    _ => Err("failed to delete discussion reply".into())
   }
 }
 
@@ -173,7 +190,12 @@ impl LearnHelper {
   /// - Parameter `reply` refers to `DiscussionReply0::id`.
   /// 
   /// Trying to delete a reply not published by yourself will generally result in an `Err`.
+  ///
+  /// Note: you can refer to `DELETE_DR_TIMEOUT` for more detail.
   pub async fn delete_discussion_reply(&self, course: IdRef<'_>, reply: IdRef<'_>) -> Result<()> {
-    check_success!(a, self.0.post(&DELETE_DISCUSSION_REPLY(course, reply)), "failed to delete discussion reply")
+    check_delete_dr_success(async move {
+      let req = self.0.post(&DELETE_DISCUSSION_REPLY(course, reply)).timeout(DELETE_DR_TIMEOUT);
+      req.send().await?.text().await
+    }.await)
   }
 }
